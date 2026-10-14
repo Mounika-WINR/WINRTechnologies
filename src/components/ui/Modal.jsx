@@ -26,6 +26,12 @@ export function Modal({ open, onClose, title, className = "", children }) {
         event.preventDefault();
         onClose();
       }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onClose();
+        }
+      }}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FloatingLogo } from "../../components/sections/FloatingLogo.jsx";
 import { Modal } from "../../components/ui/Modal.jsx";
+import { MotionSubmitFeedback } from "../../components/ui/MotionSubmitFeedback.jsx";
 
 const QUOTE_SERVICES = [
   "Web Development",
@@ -18,23 +19,17 @@ const keepCountryCodeAndDigits = (value) => {
 export function Contact() {
   const [primaryInterest, setPrimaryInterest] = useState("");
   const [quoteOpen, setQuoteOpen] = useState(false);
-  const [quoteNotice, setQuoteNotice] = useState("");
+  const [quoteSent, setQuoteSent] = useState(false);
+  const [contactSent, setContactSent] = useState(false);
 
   const submitQuote = (event) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const fields = new FormData(form);
-    const details = [
-      `Full name: ${fields.get("fullName")}`,
-      `Phone number: ${fields.get("phone")}`,
-      `Email: ${fields.get("email")}`,
-      `Company name: ${fields.get("companyName")}`,
-      `Service: ${fields.get("service")}`,
-      `Message: ${fields.get("message")}`,
-    ].join("\n");
-    const subject = `Quote request - ${fields.get("service")}`;
-    window.location.href = `mailto:info@winrtechnologies.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(details)}`;
-    setQuoteNotice("Your email app will open with the request details. Send the email there to complete your request.");
+    setQuoteSent(true);
+  };
+
+  const submitContactMessage = (event) => {
+    event.preventDefault();
+    setContactSent(true);
   };
 
   return (
@@ -68,15 +63,14 @@ export function Contact() {
             id="contact-quotes-title"
             type="button"
             onClick={() => {
-              setQuoteNotice("");
+              setQuoteSent(false);
               setQuoteOpen(true);
             }}
           >
             Request Quote
           </button>
           <p className="wr-sub wr-sub-wide">
-            Tell us what you&apos;re looking to build or staff. Share a few details and our team
-            will follow up to discuss your requirements.
+            Tell us what you&apos;re looking to build or staff. Share a few details to continue.
           </p>
         </div>
       </section>
@@ -87,74 +81,80 @@ export function Contact() {
         title="Request a Quote"
         className="wr-contact-quote-modal"
       >
-        <p className="wr-modal-intro">
-          Share your details and choose a service. Your email app will prepare a message to
-          info@winrtechnologies.com.
-        </p>
-        <form className="wr-modal-form" onSubmit={submitQuote}>
-          <label className="wr-contact-field">
-            <span>Full name <b>*</b></span>
-            <input
-              autoComplete="name"
-              name="fullName"
-              pattern="(?=.*\p{L})[\p{L}\s]{2,100}"
-              maxLength={100}
-              minLength={2}
-              onChange={(event) => {
-                event.target.value = keepLettersAndSpaces(event.target.value);
-              }}
-              required
-            />
-          </label>
-          <label className="wr-contact-field">
-            <span>Phone number <b>*</b></span>
-            <input
-              autoComplete="tel"
-              inputMode="tel"
-              name="phone"
-              type="tel"
-              placeholder="+919876543210"
-              pattern="\+[1-9][0-9]{0,2}[0-9]{10}"
-              title="Enter a + country code followed by exactly 10 phone digits, for example +919876543210."
-              onChange={(event) => {
-                event.target.value = keepCountryCodeAndDigits(event.target.value);
-              }}
-              required
-            />
-            <small>Include the country code followed by 10 digits (example: +91XXXXXXXXXX).</small>
-          </label>
-          <label className="wr-contact-field">
-            <span>Email <b>*</b></span>
-            <input autoComplete="email" maxLength={254} name="email" type="email" required />
-          </label>
-          <label className="wr-contact-field">
-            <span>Company name <b>*</b></span>
-            <input
-              autoComplete="organization"
-              name="companyName"
-              pattern="(?=.*\p{L})[\p{L}\s]{2,100}"
-              maxLength={100}
-              minLength={2}
-              onChange={(event) => {
-                event.target.value = keepLettersAndSpaces(event.target.value);
-              }}
-              required
-            />
-          </label>
-          <label className="wr-contact-field">
-            <span>Services you&apos;re interested in <b>*</b></span>
-            <select name="service" defaultValue="" required>
-              <option value="" disabled>Select a service</option>
-              {QUOTE_SERVICES.map((service) => <option key={service}>{service}</option>)}
-            </select>
-          </label>
-          <label className="wr-contact-field wr-modal-field-wide">
-            <span>Message <b>*</b></span>
-            <textarea name="message" rows="4" maxLength={2000} required />
-          </label>
-          {quoteNotice && <p className="wr-modal-notice wr-modal-field-wide" role="status">{quoteNotice}</p>}
-          <button className="wr-contact-submit wr-modal-field-wide" type="submit">Schedule the Meet</button>
-        </form>
+        {quoteSent ? (
+          <MotionSubmitFeedback />
+        ) : (
+          <>
+            <p className="wr-modal-intro">
+              Share your details and choose a service to continue.
+            </p>
+            <form className="wr-modal-form" onSubmit={submitQuote}>
+              <label className="wr-contact-field">
+                <span>Full name <b>*</b></span>
+                <input
+                  autoComplete="name"
+                  name="fullName"
+                  pattern="(?=.*\p{L})[\p{L}\s]{2,100}"
+                  maxLength={100}
+                  minLength={2}
+                  onChange={(event) => {
+                    event.target.value = keepLettersAndSpaces(event.target.value);
+                  }}
+                  required
+                />
+              </label>
+              <label className="wr-contact-field">
+                <span>Phone number <b>*</b></span>
+                <input
+                  autoComplete="tel"
+                  inputMode="tel"
+                  name="phone"
+                  type="tel"
+                  placeholder="+919876543210"
+                  pattern="\+[1-9][0-9]{0,2}[0-9]{10}"
+                  title="Enter a + country code followed by exactly 10 phone digits, for example +919876543210."
+                  onChange={(event) => {
+                    event.target.value = keepCountryCodeAndDigits(event.target.value);
+                  }}
+                  required
+                />
+                <small>Include the country code followed by 10 digits (example: +91XXXXXXXXXX).</small>
+              </label>
+              <label className="wr-contact-field">
+                <span>Email <b>*</b></span>
+                <input autoComplete="email" maxLength={254} name="email" type="email" required />
+              </label>
+              <label className="wr-contact-field">
+                <span>Company name <b>*</b></span>
+                <input
+                  autoComplete="organization"
+                  name="companyName"
+                  pattern="(?=.*\p{L})[\p{L}\s]{2,100}"
+                  maxLength={100}
+                  minLength={2}
+                  onChange={(event) => {
+                    event.target.value = keepLettersAndSpaces(event.target.value);
+                  }}
+                  required
+                />
+              </label>
+              <label className="wr-contact-field">
+                <span>Services you&apos;re interested in <b>*</b></span>
+                <select name="service" defaultValue="" required>
+                  <option value="" disabled>Select a service</option>
+                  {QUOTE_SERVICES.map((service) => <option key={service}>{service}</option>)}
+                </select>
+              </label>
+              <label className="wr-contact-field wr-modal-field-wide">
+                <span>Message <b>*</b></span>
+                <textarea name="message" rows="4" maxLength={2000} required />
+              </label>
+              <button className="wr-contact-submit wr-modal-field-wide" type="submit">
+                Schedule the Meet
+              </button>
+            </form>
+          </>
+        )}
       </Modal>
 
       <div className="wr-page-line" />
@@ -166,8 +166,9 @@ export function Contact() {
         </div>
         <article className="wr-contact-message-card">
           <h3>Send us a Message</h3>
-          <p className="wr-contact-form-intro">Get a response from our experts within 2 hours.</p>
-          <form className="wr-contact-form" onSubmit={(event) => event.preventDefault()}>
+          <p className="wr-contact-form-intro">Tell us about your goals and how we can help.</p>
+          {contactSent ? <MotionSubmitFeedback /> : (
+          <form className="wr-contact-form" onSubmit={submitContactMessage}>
             <label className="wr-contact-field">
               <span>Full Name <b>*</b></span>
               <input autoComplete="name" name="fullName" required />
@@ -223,6 +224,7 @@ export function Contact() {
                   ? "Share the roles you are looking for and your requirements..."
                   : "Tell us about your specific challenges and requirements..."}
                 rows="5"
+                required
               />
               {primaryInterest === "Job Seeker" && (
                 <span className="wr-contact-resume-upload">
@@ -257,6 +259,7 @@ export function Contact() {
               Your information is secure and will never be shared with third parties.
             </p>
           </form>
+          )}
         </article>
       </section>
     </div>

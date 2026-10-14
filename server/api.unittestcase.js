@@ -87,9 +87,9 @@ class FakePool {
   }
 }
 
-async function startTestServer() {
+async function startTestServer(options) {
   const pool = new FakePool();
-  const server = createApp(pool).listen(0, "127.0.0.1");
+  const server = createApp(pool, options).listen(0, "127.0.0.1");
   await once(server, "listening");
   const { port } = server.address();
   return {
@@ -127,6 +127,152 @@ test("GET /api/opportunities returns opportunity rows from the database layer", 
   const result = await response.json();
   assert.equal(response.status, 200);
   assert.deepEqual(result.opportunities, OPPORTUNITIES);
+});
+
+test("POST /api/contact/quote sends a validated quote request to the mail service", async (t) => {
+  const deliveries = [];
+  const api = await startTestServer({
+    sendQuoteEmail: async (fields) => deliveries.push(fields),
+  });
+  t.after(api.close);
+
+  const payload = {
+    fullName: "Mounika Devi",
+    phone: "+919876543210",
+    email: "mounika@example.com",
+    companyName: "WINR Technologies",
+    service: "Web Development",
+    message: "I would like to discuss a new website.",
+  };
+  const response = await fetch(`${api.baseUrl}/api/contact/quote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.match(result.message, /Thank you for your message/);
+  assert.deepEqual(deliveries, [payload]);
+});
+
+test("POST /api/contact/quote rejects invalid details without sending email", async (t) => {
+  let sent = false;
+  const api = await startTestServer({
+    sendQuoteEmail: async () => { sent = true; },
+  });
+  t.after(api.close);
+
+  const response = await fetch(`${api.baseUrl}/api/contact/quote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fullName: "Mounika",
+      phone: "not-a-phone",
+      email: "not-an-email",
+      companyName: "WINR Technologies",
+      service: "Web Development",
+      message: "Quote request",
+    }),
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(sent, false);
+});
+
+test("POST /api/contact/quote reports delivery failures without a success response", async (t) => {
+  const api = await startTestServer({
+    sendQuoteEmail: async () => {
+      const error = new Error("SMTP credentials are not configured.");
+      error.code = "SMTP_NOT_CONFIGURED";
+      throw error;
+    },
+  });
+  t.after(api.close);
+
+  const response = await fetch(`${api.baseUrl}/api/contact/quote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fullName: "Mounika Devi",
+      phone: "+919876543210",
+      email: "mounika@example.com",
+      companyName: "WINR Technologies",
+      service: "Web Development",
+      message: "I would like to discuss a new website.",
+    }),
+  });
+  const result = await response.json();
+
+  assert.equal(response.status, 503);
+  assert.match(result.error, /not configured/i);
+});
+
+test("POST /api/contact/message emails valid Get in Touch and Let's Talk submissions", async (t) => {
+  const deliveries = [];
+  const api = await startTestServer({
+    sendContactEmail: async (fields) => deliveries.push(fields),
+  });
+  t.after(api.close);
+
+  for (const payload of [
+    {
+      formType: "Get in Touch",
+      fullName: "Mounika Devi",
+      email: "mounika@example.com",
+      phone: "+919876543210",
+      primaryInterest: "Business Owner",
+      purpose: "Web Development",
+      message: "I need a new company website.",
+      privacyConsent: "on",
+    },
+    {
+      formType: "Let's Talk",
+      name: "Mounika Devi",
+      email: "mounika@example.com",
+      purpose: "Explore a partnership",
+      message: "I would like to discuss this industry.",
+      industry: "Technology",
+    },
+  ]) {
+    const response = await fetch(`${api.baseUrl}/api/contact/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    assert.equal(response.status, 200);
+    assert.match(result.message, /Thank you for your message/);
+  }
+
+  assert.equal(deliveries.length, 2);
+  assert.equal(deliveries[0].formType, "Get in Touch");
+  assert.equal(deliveries[0].fullName, "Mounika Devi");
+  assert.equal(deliveries[1].formType, "Let's Talk");
+  assert.equal(deliveries[1].industry, "Technology");
+});
+
+test("POST /api/contact/message rejects invalid submissions without sending email", async (t) => {
+  let sent = false;
+  const api = await startTestServer({
+    sendContactEmail: async () => { sent = true; },
+  });
+  t.after(api.close);
+
+  const response = await fetch(`${api.baseUrl}/api/contact/message`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      formType: "Let's Talk",
+      name: "M",
+      email: "not-an-email",
+      purpose: "Something",
+      message: "",
+    }),
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal(sent, false);
 });
 
 test("POST /api/ats-score validates input and returns a match report", async (t) => {

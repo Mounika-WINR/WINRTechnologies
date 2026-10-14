@@ -14,6 +14,14 @@ The career opportunities page loads published vacancies from the local PostgreSQ
 
 The API returns only published opportunities that have not passed their closing date. `server/schema.sql` contains the opportunity-table definition for setting up a fresh development database; it is safe to execute when the table already exists.
 
+## Contact form behavior
+
+Request a Quote, Get in Touch, and Industries Let's Talk currently show a local mailbox animation and thank-you confirmation after valid submission. These forms do not send email or save submitted details.
+
+The API retains server-side SMTP support for a future email integration. To enable it, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM` in the API server's environment. Use port 465 with `SMTP_SECURE=true` for implicit TLS, or port 587 with `SMTP_SECURE=false` for STARTTLS. Keep credentials in the server's `.env` or deployment secret store; never put them in client-side `VITE_*` variables.
+
+For a Hostinger mailbox, the example configuration uses `smtp.hostinger.com`, port `465`, implicit TLS, and the full mailbox address as the SMTP username and sender. Confirm the outgoing server details in Hostinger hPanel under the mailbox's **Connect Apps & Devices** settings. Set `SMTP_PASSWORD` to that mailbox's password in the local `.env` or deployment secrets; do not commit or share it.
+
 ## Resume portal storage (development)
 
 The resume portal sends consent metadata to `POST /api/resume-consents` only after both the terms checkbox and resume-storage permission checkbox are accepted. Clicking Preview attempts to save the current resume data and selected photo through `PUT /api/resumes/:resumeSessionId`; another preview replaces that session's saved version. The preview still opens if saving fails, with a notice that it was not stored. Unchecking either consent box after acceptance records withdrawal and deletes the saved resume. ATS scores are not stored. The Terms & Conditions link opens a new tab so the in-progress form remains in place.

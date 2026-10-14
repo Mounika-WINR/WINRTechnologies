@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { Modal } from "../../components/ui/Modal.jsx";
 import {
   motion,
   useMotionValue,
@@ -222,61 +223,6 @@ function IntroActions() {
   );
 }
 
-/* ============================================================================
- * DEMO_SUBMISSION_MODE — PRESENTATION / DEMO ONLY
- * ---------------------------------------------------------------------------
- * While this flag is `true`, submitting the "Let's Talk" form performs NO network
- * request, sends NO email, and stores NO data anywhere. It only simulates a
- * short in-flight delay so the Motion-Submit-Button animation can be reviewed.
- *
- * It is currently `false`: the form is LIVE. If VITE_CONTACT_ENDPOINT is set it
- * POSTs the payload there; otherwise it opens the user's mail client addressed
- * to CONTACT_EMAIL (info@winrtechnologies.com) with the details pre-filled.
- * ========================================================================== */
-const DEMO_SUBMISSION_MODE = false;
-
-const CONTACT_EMAIL = "info@winrtechnologies.com";
-
-const DEMO_SIMULATED_LATENCY_MS = 2700;   // enough time for the envelope animation
-const DEMO_SUCCESS_DISPLAY_MS = 1900;     // how long the thank-you scene shows
-
-/* Replacement seam for a real backend. Only the payload shape matters. */
-async function submitForm({ fields, industry }) {
-  const payload = { ...fields, industry: industry?.name ?? "" };
-  if (DEMO_SUBMISSION_MODE) {
-    /* Demo only — nothing is sent, nothing is stored. */
-    await new Promise((r) => setTimeout(r, DEMO_SIMULATED_LATENCY_MS));
-    return { delivered: false, demo: true };
-  }
-  const endpoint = import.meta.env?.VITE_CONTACT_ENDPOINT;
-  if (endpoint) {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return { delivered: true, demo: false };
-  }
-  /* No backend configured — hand the message off to the user's mail client,
-     addressed to our team, with the form contents pre-filled. */
-  const subject = industry
-    ? `Let's Talk — ${industry.name}`
-    : "Let's Talk — General Enquiry";
-  const body = [
-    `Name: ${fields.name}`,
-    `Email: ${fields.email}`,
-    `Phone: ${fields.phone || "—"}`,
-    `Purpose: ${fields.purpose}`,
-    "",
-    "Message:",
-    fields.message,
-  ].join("\n");
-  const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailto;
-  return { delivered: true, demo: false, mailto: true };
-}
-
 function MotionSendScene({ stage, reducedMotion }) {
   const stageLabel = {
     folding: "Folding your message",
@@ -402,7 +348,7 @@ function MotionThankYou({ reducedMotion }) {
         Thanks for reaching out!
       </motion.h3>
       <motion.p initial={reducedMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reducedMotion ? 0 : 0.3, delay: reducedMotion ? 0 : 0.45 }}>
-        The envelope made it to the mailbox.
+        We appreciate your interest in WINR Technologies.
       </motion.p>
     </motion.div>
   );
@@ -410,68 +356,25 @@ function MotionThankYou({ reducedMotion }) {
 
 /* ─── POPUP FORM ─────────────────────────────────────────────────────────── */
 function IndustryPopup({ industry, onClose }) {
-  const overlayRef = useRef(null);
-  const firstInputRef = useRef(null);
-
   const [fields, setFields] = useState({ name: "", email: "", phone: "", purpose: "", message: "" });
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState("idle"); // idle | pending | success | error
   const [sendStage, setSendStage] = useState("folding");
-  const [errorMsg, setErrorMsg] = useState("");
   const reduceMotion = useReducedMotion();
 
-  /* Blocks repeat submissions; cleared on unmount or reset. */
   const submittingRef = useRef(false);
-  const closeTimerRef = useRef(null);
-
-  useEffect(() => () => {
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-  }, []);
 
   useEffect(() => {
     if (status !== "pending") return undefined;
     const sealTimer = setTimeout(() => setSendStage("sealed"), 650);
     const mailTimer = setTimeout(() => setSendStage("mailing"), 1350);
+    const completeTimer = setTimeout(() => setStatus("success"), 2550);
     return () => {
       clearTimeout(sealTimer);
       clearTimeout(mailTimer);
+      clearTimeout(completeTimer);
     };
   }, [status]);
-
-  /* Lock background scroll */
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-
-  /* Focus first input on open */
-  useEffect(() => {
-    firstInputRef.current?.focus();
-  }, []);
-
-  /* Escape key closes */
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === "Escape") onClose();
-    /* Focus trap */
-    if (e.key === "Tab") {
-      const focusable = overlayRef.current?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (!focusable || focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
-        e.preventDefault();
-        (e.shiftKey ? last : first).focus();
-      }
-    }
-  }, [onClose]);
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
 
   const validate = () => {
     const errs = {};
@@ -488,34 +391,14 @@ function IndustryPopup({ industry, onClose }) {
     if (errors[e.target.name]) setErrors((err) => { const n = { ...err }; delete n[e.target.name]; return n; });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    /* Guard: never allow a second submission while animating or after done. */
     if (submittingRef.current) return;
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     submittingRef.current = true;
     setSendStage("folding");
     setStatus("pending");
-    setErrorMsg("");
-    try {
-      await submitForm({ fields, industry });
-      setStatus("success");
-      /* Let the success animation play, then close automatically. */
-      closeTimerRef.current = setTimeout(() => {
-        submittingRef.current = false;
-        onClose();
-      }, DEMO_SUCCESS_DISPLAY_MS);
-    } catch (err) {
-      submittingRef.current = false;
-      setStatus("error");
-      setErrorMsg(
-        err?.message === "NO_ENDPOINT"
-          ? "No submission endpoint is configured for this project yet. " +
-            "Please contact us directly at info@winrtechnologies.com."
-          : "Something went wrong while sending your message. Please check your connection and try again."
-      );
-    }
   };
 
   const field = (name, label, type = "text", required = false) => (
@@ -525,7 +408,6 @@ function IndustryPopup({ industry, onClose }) {
       </label>
       <input
         id={`ind-form-${name}`}
-        ref={name === "name" ? firstInputRef : undefined}
         type={type}
         name={name}
         value={fields[name]}
@@ -536,48 +418,27 @@ function IndustryPopup({ industry, onClose }) {
         className={`ind-form-input${errors[name] ? " has-error" : ""}`}
         disabled={status === "pending" || status === "success"}
         autoComplete={name === "email" ? "email" : name === "phone" ? "tel" : "off"}
+        autoFocus={name === "name"}
       />
       {errors[name] && <p id={`ind-err-${name}`} className="ind-form-error" role="alert">{errors[name]}</p>}
     </div>
   );
 
   return (
-    /* Backdrop */
-    <div
-      className="ind-popup-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Let's Talk — ${industry?.name ?? "Industries"}`}
-      ref={overlayRef}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="ind-popup-panel">
-        {/* Close */}
-        <button
-          className="ind-popup-close"
-          onClick={onClose}
-          aria-label="Close form"
-        >
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
-
-        {/* Header */}
-        <div className="ind-popup-header">
-          <h2 className="ind-popup-title">Let&apos;s Talk</h2>
+    <Modal open onClose={onClose} title="Let’s Talk" className="ind-popup-modal">
+      <div className="ind-popup-header">
           <p className="ind-popup-sub">Industry Context: {industry ? <strong>{industry.name}</strong> : "General"}</p>
           {industry && (
             <span className="ind-popup-chip" aria-hidden="true">{industry.name}</span>
           )}
-        </div>
+      </div>
 
-        <AnimatePresence mode="wait" initial={false}>
-          {status === "pending" ? (
+      <AnimatePresence mode="wait" initial={false}>
+        {status === "pending" ? (
             <MotionSendScene key="sending" stage={sendStage} reducedMotion={reduceMotion} />
-          ) : status === "success" ? (
+        ) : status === "success" ? (
             <MotionThankYou key="thank-you" reducedMotion={reduceMotion} />
-          ) : (
+        ) : (
         <motion.form
           key="form"
           className="ind-popup-form"
@@ -643,18 +504,13 @@ function IndustryPopup({ industry, onClose }) {
             {errors.message && <p id="ind-err-message" className="ind-form-error" role="alert">{errors.message}</p>}
           </div>
 
-            {status === "error" && (
-              <p className="ind-form-submit-error" role="alert">{errorMsg}</p>
-            )}
-
-            {/* The real submit interaction runs the envelope and mailbox sequence. */}
             <div className="ind-submit-wrap">
               <button
                 type="submit"
                 className="ind-submit-btn"
                 aria-busy={false}
               >
-                <span className="ind-submit-label">{status === "error" ? "Try Again" : "Send Message"}</span>
+                <span className="ind-submit-label">Send Message</span>
                 <span className="ind-submit-arrow" aria-hidden="true">→</span>
               </button>
             </div>
@@ -662,16 +518,13 @@ function IndustryPopup({ industry, onClose }) {
             {/* Screen-reader status for the confirmation */}
             <p className="ind-submit-live" role="status" aria-live="polite">
               {status === "success"
-                ? "Your message is on its way. Closing."
-                : status === "error"
-                  ? errorMsg
-                  : ""}
+                ? "Thank you for your time. Our team will review your details and get back to you soon."
+                : ""}
             </p>
         </motion.form>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+        )}
+      </AnimatePresence>
+    </Modal>
   );
 }
 
@@ -927,19 +780,7 @@ export function Industries({ focusId }) {
     </div>
     {createPortal(
       <AnimatePresence>
-        {popup && (
-          <motion.div
-            className="ind-popup-motion"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <IndustryPopup
-              industry={popup.industry}
-              onClose={closePopup}
-            />
-          </motion.div>
-        )}
+        {popup && <IndustryPopup industry={popup.industry} onClose={closePopup} />}
       </AnimatePresence>,
       document.body,
     )}

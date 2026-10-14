@@ -1,5 +1,7 @@
 import "dotenv/config";
+import { Buffer } from "node:buffer";
 import express from "express";
+import nodemailer from "nodemailer";
 import pg from "pg";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
@@ -13,16 +15,80 @@ const STORAGE_CONSENT_TEXT = "I give WINR permission to store the resume I creat
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_RESUME_JSON_LENGTH = 1_000_000;
 const MAX_PHOTO_DATA_URL_LENGTH = 3_000_000;
+const QUOTE_SERVICES = new Set([
+  "Web Development",
+  "App Development",
+  "Software Development",
+  "Staffing",
+]);
 const apiRoutes = [
   { method: "GET", path: "/api/health", description: "Check API and PostgreSQL connection" },
   { method: "GET", path: "/api/opportunities", description: "List published opportunities" },
+  { method: "POST", path: "/api/contact/quote", description: "Email a quote request to WINR" },
+  { method: "POST", path: "/api/contact/message", description: "Email a contact form submission to WINR" },
   { method: "POST", path: "/api/ats-score", description: "Score resume keywords against a job description" },
   { method: "POST", path: "/api/resume-consents", description: "Record accepted resume consent" },
   { method: "POST", path: "/api/resume-consents/:id/withdraw", description: "Record consent withdrawal" },
   { method: "PUT", path: "/api/resumes/:resumeSessionId", description: "Save or replace a resume preview" },
 ];
 
-export function createApp(pool) {
+async function deliverQuoteEmail(fields) {
+  return deliverContactEmail({
+    ...fields,
+    formType: "Request a Quote",
+    subject: `Quote request - ${fields.service}`,
+  });
+}
+
+async function deliverContactEmail(fields) {
+  const requiredMailSettings = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM"];
+  const missingMailSettings = requiredMailSettings.filter((key) => !process.env[key]);
+  if (missingMailSettings.length > 0) {
+    const error = new Error(`Missing SMTP configuration: ${missingMailSettings.join(", ")}`);
+    error.code = "SMTP_NOT_CONFIGURED";
+    throw error;
+  }
+
+  const port = Number(process.env.SMTP_PORT);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    const error = new Error("SMTP_PORT must be a valid TCP port number.");
+    error.code = "SMTP_NOT_CONFIGURED";
+    throw error;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port,
+    secure: process.env.SMTP_SECURE === "true" || (process.env.SMTP_SECURE !== "false" && port === 465),
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM,
+    to: "info@winrtechnologies.com",
+    replyTo: fields.email,
+    subject: fields.subject || `${fields.formType} - ${fields.fullName}`,
+    text: Object.entries(fields)
+      .filter(([key, value]) => !["subject", "resume"].includes(key) && typeof value === "string" && value.trim())
+      .map(([key, value]) => `${key.replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)}: ${value.trim()}`)
+      .join("\n"),
+    attachments: fields.resume
+      ? [{
+        filename: fields.resume.name,
+        content: Buffer.from(fields.resume.contentBase64, "base64"),
+        contentType: fields.resume.type,
+      }]
+      : [],
+  });
+}
+
+export function createApp(pool, {
+  sendQuoteEmail = deliverQuoteEmail,
+  sendContactEmail = deliverContactEmail,
+} = {}) {
   const app = express();
   app.disable("x-powered-by");
   app.use(express.json({ limit: "5mb" }));
@@ -77,6 +143,101 @@ app.get("/api/opportunities", async (_request, response, next) => {
     response.json({ opportunities: rows });
   } catch (error) {
     next(error);
+  }
+});
+
+app.post("/api/contact/quote", async (request, response) => {
+  const fields = request.body ?? {};
+  const { fullName, phone, email, companyName, service, message } = fields;
+  const valid =
+    typeof fullName === "string"
+    && /^[\p{L}\s]{2,100}$/u.test(fullName.trim())
+    && typeof phone === "string"
+    && /^\+[1-9]\d{0,2}\d{10}$/.test(phone)
+    && typeof email === "string"
+    && email.length <= 254
+    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    && typeof companyName === "string"
+    && /^[\p{L}\s]{2,100}$/u.test(companyName.trim())
+    && typeof service === "string"
+    && QUOTE_SERVICES.has(service)
+    && typeof message === "string"
+    && message.trim().length > 0
+    && message.length <= 2000;
+
+  if (!valid) {
+    return response.status(400).json({ error: "Enter valid details in all required quote request fields." });
+  }
+
+  try {
+    await sendQuoteEmail({ fullName: fullName.trim(), phone, email, companyName: companyName.trim(), service, message: message.trim() });
+    return response.json({ message: "Thank you for your message. We will get back to you shortly." });
+  } catch (error) {
+    if (error.code === "SMTP_NOT_CONFIGURED") {
+      console.error("Quote email is not configured:", error.message);
+      return response.status(503).json({ error: "Quote email delivery is not configured. Please contact WINR directly." });
+    }
+
+    console.error("Quote email delivery failed:", error);
+    return response.status(502).json({ error: "We could not send your request right now. Please try again later." });
+  }
+});
+
+app.post("/api/contact/message", async (request, response) => {
+  const fields = request.body ?? {};
+  const { formType, fullName, name, email, phone, message, resume } = fields;
+  const senderName = fullName ?? name;
+  const valid =
+    typeof formType === "string"
+    && ["Get in Touch", "Let's Talk"].includes(formType)
+    && typeof senderName === "string"
+    && senderName.trim().length >= 2
+    && senderName.length <= 100
+    && typeof email === "string"
+    && email.length <= 254
+    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    && (formType !== "Get in Touch" || fields.privacyConsent === "on")
+    && (phone === undefined || (typeof phone === "string" && phone.length <= 30))
+    && typeof message === "string"
+    && message.trim().length > 0
+    && message.length <= 5000
+    && (resume === undefined || (
+      resume
+      && typeof resume === "object"
+      && ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(resume.type)
+      && typeof resume.name === "string"
+      && resume.name.length <= 255
+      && typeof resume.contentBase64 === "string"
+      && resume.contentBase64.length <= 4_194_304
+    ));
+
+  if (!valid) {
+    return response.status(400).json({ error: "Enter valid details in all required contact form fields." });
+  }
+
+  try {
+    const forwardedFields = Object.fromEntries(
+      ["phone", "primaryInterest", "purpose", "studentOpportunity", "industry", "privacyConsent", "newsletterConsent"]
+        .filter((key) => typeof fields[key] === "string")
+        .map((key) => [key, fields[key]]),
+    );
+    await sendContactEmail({
+      ...forwardedFields,
+      formType,
+      fullName: senderName.trim(),
+      email: email.trim(),
+      message: message.trim(),
+      ...(resume ? { resume } : {}),
+    });
+    return response.json({ message: "Thank you for your message. We will get back to you shortly." });
+  } catch (error) {
+    if (error.code === "SMTP_NOT_CONFIGURED") {
+      console.error("Contact email is not configured:", error.message);
+      return response.status(503).json({ error: "Email delivery is not configured. Please contact WINR directly." });
+    }
+
+    console.error("Contact email delivery failed:", error);
+    return response.status(502).json({ error: "We could not send your message right now. Please try again later." });
   }
 });
 
@@ -272,7 +433,7 @@ function startServer() {
     process.exit(1);
   }
 
-  const port = Number(process.env.API_PORT || 3001);
+  const port = Number(process.env.API_PORT || 3002);
   const databasePort = Number(process.env.DB_PORT);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     console.error("API_PORT must be a valid TCP port number.");
