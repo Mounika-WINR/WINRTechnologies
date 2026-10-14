@@ -1,0 +1,2 @@
+/* legacy entry: canonical theme is src/styles/index.css (kept for back-compat) */
+@import "./styles/index.css";

@@ -1,0 +1,43 @@
+:root{--navy:#0B1C33;--navy2:#12294A;--card:#1B3355;--ink:#EAF0F8;--mut:#B9C6DA;--acc:#F97316;--line:rgba(255,255,255,.12)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1100px 500px at 80% -5%,rgba(249,115,22,.14),transparent 60%),linear-gradient(180deg,#0A1930 0%,#0B1C33 45%,#0A1930 100%);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+#root{width:100%;max-width:1200px;margin:0 auto;min-height:100svh;display:flex;flex-direction:column;border:none;background:transparent;color:var(--ink);text-align:left}
+a{color:inherit}
+.wr-top{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 22px;background:rgba(245,239,230,.96);backdrop-filter:blur(6px);border-bottom:1px solid rgba(0,0,0,.06)}
+.wr-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.wr-logo{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(from 40deg,#1E3A5F,#F97316,#1E3A5F);color:#fff;font-weight:900}
+.wr-brand-t strong{display:block;color:#1E3A5F;letter-spacing:.04em}
+.wr-brand-t em{display:block;font-style:normal;font-size:10px;letter-spacing:.28em;color:#5b6b82}
+.wr-top nav{display:flex;gap:22px;flex-wrap:wrap}
+.wr-top nav a{text-decoration:none;color:#1E3A5F;font-weight:600;font-size:14px;padding-bottom:4px}
+.wr-top nav a.on{color:var(--acc);border-bottom:2px solid var(--acc)}
+.wr-hero{text-align:center;padding:84px 24px 30px}
+.wr-eyebrow{letter-spacing:.3em;font-size:12px;color:var(--mut);margin:0 0 14px}
+.wr-hero h1{margin:0;font-size:clamp(38px,6vw,72px);line-height:1.02;letter-spacing:-.02em;color:#F4F1EA}
+.wr-hero h1 .acc{color:var(--acc)}
+.wr-sub{color:var(--mut);max-width:760px;margin:18px auto 0;line-height:1.6}
+.wr-sub.sm{font-size:17px}.wr-sub.xs{font-size:14px}
+.wr-cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.btn{text-decoration:none;font-weight:800;font-size:13px;letter-spacing:.08em;padding:14px 28px;border-radius:3px}
+.btn.skew{transform:skewX(-12deg)}.btn.skew span{display:inline-block;transform:skewX(12deg)}
+.btn.pri{background:var(--acc);color:#fff}
+.btn.sec{background:rgba(255,255,255,.06);color:#EAF0F8;border:1px solid rgba(255,255,255,.35)}
+.wr-sec{text-align:center;padding:56px 24px}
+.wr-sec h2{margin:0;font-size:clamp(26px,4vw,44px);letter-spacing:-.01em;color:#F4F1EA}
+.wr-rule{width:64px;height:4px;background:var(--acc);margin:22px auto 30px;transform:skewX(-20deg)}
+.winfolder-outer{width:min(880px,94vw);margin:0 auto;perspective:1400px}
+.winfolder-outer button:focus-visible,.winfolder-outer a:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.wr-label{color:var(--acc);font-weight:800;letter-spacing:.12em;margin:34px 0 14px}
+.wr-pillars{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.wr-pillar{border:1px solid rgba(249,115,22,.35);background:rgba(255,255,255,.04);border-radius:12px;padding:16px 18px;max-width:300px;color:#E8EEF6;font-size:14px;line-height:1.5}
+.wr-pillar .dot{display:block;width:18px;height:18px;border-radius:50%;border:3px solid var(--acc);margin:0 auto 10px}
+.wr-ticks{list-style:none;display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:26px 0 0;padding:0;color:#E8EEF6;font-size:14px}
+.odot{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--acc);margin-right:8px;vertical-align:-1px}
+.wr-foot{background:#0E2A52;border-top:1px solid var(--line);padding:40px 24px 16px;margin-top:20px}
+.wr-foot-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:26px;max-width:1000px;margin:0 auto}
+.wr-news{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.wr-news input{padding:12px 14px;border-radius:8px;border:1px solid var(--line)}
+.wr-news button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:12px;font-weight:800;cursor:pointer}
+.wr-copy{border-top:1px solid var(--line);margin-top:26px;padding-top:14px;font-size:12px;color:var(--mut);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media(max-width:760px){.wr-top nav{display:none}.wr-foot-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}

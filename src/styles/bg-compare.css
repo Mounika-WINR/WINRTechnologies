@@ -1,0 +1,202 @@
+/* ==========================================================================
+   BACKGROUND COMPONENT COMPARISON — reference page only (/#/__bg-compare).
+   Loaded ONLY on that route. Not part of the live site.
+   ========================================================================== */
+.cmp-root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 20px 48px;
+  font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+  color: #172238;
+}
+
+.cmp-bar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.cmp-bar strong { font-size: 19px; }
+.cmp-bar-sub { color: #4A5A73; font-size: 13px; }
+
+/* ---- tabs ---- */
+.cmp-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 14px; }
+.cmp-tab {
+  display: flex; flex-direction: column; gap: 3px; text-align: left;
+  background: #fff; border: 1px solid rgba(23,34,56,.14); border-radius: 12px;
+  padding: 11px 13px; cursor: pointer; font: inherit; color: inherit;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.cmp-tab:hover { transform: translateY(-2px); box-shadow: 0 12px 22px -14px rgba(11,28,51,.4); }
+.cmp-tab b { font-size: 11px; color: #4A5A73; }
+.cmp-tab-name { font-size: 13.5px; font-weight: 700; line-height: 1.25; }
+.cmp-tab-cost { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: #8A97AA; }
+.cmp-tab.is-active { border-color: #DE7829; box-shadow: 0 0 0 2px rgba(222,120,41,.22), 0 14px 26px -16px rgba(222,120,41,.5); }
+.cmp-tab--good.is-active { border-color: #1B7F4B; box-shadow: 0 0 0 2px rgba(27,127,75,.22), 0 14px 26px -16px rgba(27,127,75,.45); }
+
+/* ---- stage = the "section" the background has to live in ---- */
+.cmp-stage {
+  position: relative;
+  height: 520px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(23,34,56,.14);
+  box-shadow: 0 26px 50px -26px rgba(11,28,51,.45);
+  isolation: isolate;
+}
+.cmp-layer { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.cmp-caption-badge {
+  position: absolute; left: 12px; bottom: 10px; z-index: 3;
+  font-size: 10.5px; letter-spacing: .1em; font-weight: 700;
+  color: rgba(255,255,255,.55);
+}
+
+.cmp-content-wrap { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; padding: 34px 40px; }
+.cmp-content { display: grid; grid-template-columns: minmax(220px, 380px) 1fr; gap: 40px; align-items: center; width: 100%; }
+.cmp-content-left { text-align: center; }
+.cmp-logo-ph {
+  font-size: 54px; font-weight: 900; letter-spacing: .08em;
+  color: #0B1C33; filter: drop-shadow(0 14px 26px rgba(11,28,51,.16));
+}
+.cmp-tagline { margin: 6px 0 0; color: #DE7829; font-weight: 800; letter-spacing: .06em; font-size: 15px; }
+.cmp-eyebrow { letter-spacing: .3em; font-size: 11px; color: #4A5A73; margin: 0 0 12px; }
+.cmp-content h1 { margin: 0; font-size: clamp(26px, 3.1vw, 40px); line-height: 1.08; letter-spacing: -.02em; color: #172238; }
+.cmp-content h1 span {
+  color: #DE7829;
+}
+
+/* On the dark backgrounds the real site copy becomes hard to read — that is
+   exactly what is being demonstrated. Copy is recoloured to legible white so
+   the reference stays readable; the brand blue/orange contrast is untouched. */
+.cmp-content-wrap.on-dark .cmp-content h1 { color: #FFFFFF; }
+.cmp-content-wrap.on-dark .cmp-eyebrow { color: rgba(255, 255, 255, .68); }
+.cmp-content-wrap.on-dark .cmp-desc { color: rgba(255, 255, 255, .84); }
+.cmp-content-wrap.on-dark .cmp-tagline { color: #FFA45C; }
+.cmp-content-wrap.on-dark .cmp-logo-ph { color: #FFFFFF; }
+.cmp-desc { color: #4A5A73; font-size: 13.5px; line-height: 1.65; max-width: 560px; margin: 14px 0 0; }
+.cmp-btns { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+.cmp-btn { font-size: 11px; font-weight: 800; letter-spacing: .08em; padding: 12px 22px; border-radius: 3px; transform: skewX(-12deg); }
+.cmp-btn.pri { background: #DE7829; color: #fff; }
+.cmp-btn.sec { background: rgba(255,255,255,.72); color: #172238; border: 1px solid rgba(23,34,56,.3); }
+
+/* On the dark backgrounds the real site copy becomes hard to read — that is
+   exactly the point being demonstrated, so it is shown as-is (no overrides). */
+
+.cmp-badge-top {
+  position: absolute; top: 12px; right: 14px; z-index: 3;
+  background: rgba(11,28,51,.82); color: #fff; font-size: 11px; font-weight: 800;
+  letter-spacing: .08em; padding: 6px 12px; border-radius: 20px;
+}
+
+/* ---- notes ---- */
+.cmp-notes { margin-top: 16px; background: #fff; border: 1px solid rgba(23,34,56,.12); border-radius: 14px; padding: 18px 22px; }
+.cmp-notes h2 { margin: 0 0 10px; font-size: 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cmp-notes ul { margin: 0; padding-left: 20px; display: grid; gap: 7px; color: #4A5A73; font-size: 13.5px; line-height: 1.6; }
+.cmp-pill { font-size: 10.5px; font-weight: 800; letter-spacing: .1em; padding: 4px 11px; border-radius: 20px; }
+.cmp-pill--problem { background: rgba(200,45,45,.12); color: #B3261E; border: 1px solid rgba(200,45,45,.3); }
+.cmp-pill--close { background: rgba(222,120,41,.14); color: #A85A15; border: 1px solid rgba(222,120,41,.35); }
+.cmp-pill--good { background: rgba(27,127,75,.13); color: #14663B; border: 1px solid rgba(27,127,75,.35); }
+.cmp-foot { margin-top: 14px; font-size: 12px; color: #8A97AA; }
+
+/* ==========================================================================
+   1. CHROMA SHADER replica
+   ========================================================================== */
+.cmp-chroma { background: radial-gradient(circle at 50% 55%, #2A1150 0%, #14082A 55%, #06030F 100%); }
+.cmp-chroma-strands { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cmp-strand { animation-name: cmpStrand; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+@keyframes cmpStrand {
+  0%, 100% { transform: translate3d(0, -16px, 0) scaleY(1); }
+  50%      { transform: translate3d(0, 20px, 0) scaleY(1.06); }
+}
+
+/* ==========================================================================
+   2. AURA NIGHT SKY replica
+   ========================================================================== */
+.cmp-night { background: linear-gradient(180deg, #050B1A 0%, #0A1730 45%, #061024 100%); }
+.cmp-stars { position: absolute; inset: 0; background-repeat: repeat; }
+.cmp-stars-a {
+  background-image:
+    radial-gradient(1.4px 1.4px at 20px 30px, rgba(255,255,255,.95), transparent),
+    radial-gradient(1.2px 1.2px at 120px 90px, rgba(255,255,255,.75), transparent),
+    radial-gradient(1.6px 1.6px at 220px 40px, rgba(200,225,255,.9), transparent),
+    radial-gradient(1px 1px at 300px 140px, rgba(255,255,255,.7), transparent),
+    radial-gradient(1.3px 1.3px at 60px 180px, rgba(255,255,255,.85), transparent);
+  background-size: 360px 220px;
+  animation: cmpTwinkle 4s ease-in-out infinite;
+}
+.cmp-stars-b {
+  background-image:
+    radial-gradient(1px 1px at 80px 60px, rgba(255,255,255,.6), transparent),
+    radial-gradient(1.5px 1.5px at 200px 160px, rgba(180,215,255,.8), transparent),
+    radial-gradient(1.1px 1.1px at 320px 80px, rgba(255,255,255,.7), transparent);
+  background-size: 420px 260px;
+  animation: cmpTwinkle 6.5s ease-in-out infinite reverse;
+}
+@keyframes cmpTwinkle { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+.cmp-night-stripes { position: absolute; inset: -20% -10%; }
+.cmp-night-stripes span {
+  position: absolute; left: -10%; right: -10%; height: 190px; border-radius: 50%;
+  filter: blur(52px); opacity: .42;
+  animation: cmpNightDrift 16s ease-in-out infinite alternate;
+}
+.cmp-night-stripes span:nth-child(1) { top: 22%; background: linear-gradient(90deg, #1B4FA8, #6A3FBF, #C05A2A); }
+.cmp-night-stripes span:nth-child(2) { top: 40%; background: linear-gradient(90deg, #0E3E86, #2F7FD0, #8A4BC8); opacity: .3; }
+.cmp-night-stripes span:nth-child(3) { top: 58%; background: linear-gradient(90deg, #C05A2A, #3A2C8C, #0E3E86); opacity: .26; }
+@keyframes cmpNightDrift { from { transform: translateX(-5%) rotate(-3deg); } to { transform: translateX(5%) rotate(3deg); } }
+.cmp-moon {
+  position: absolute; top: 44px; right: 74px; width: 74px; height: 74px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 32%, #FFFFFF, #D8E4F5 60%, #A9BDD8 100%);
+  box-shadow: 0 0 60px 18px rgba(200,220,255,.35);
+}
+
+/* ==========================================================================
+   3. AURORA FLOW replica
+   ========================================================================== */
+.cmp-flow { background: linear-gradient(180deg, #061024 0%, #0A1C3A 50%, #050C1C 100%); }
+.cmp-flow-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cmp-ribbon { animation: cmpRibbon 13s ease-in-out infinite alternate; transition: transform .5s cubic-bezier(.22,1,.36,1); }
+@keyframes cmpRibbon {
+  from { transform: translateY(-26px) scaleY(1); }
+  to   { transform: translateY(26px) scaleY(1.08); }
+}
+
+/* ==========================================================================
+   4. SHADER BACKGROUNDS replica
+   ========================================================================== */
+.cmp-shaderbg { background: linear-gradient(140deg, #10203A 0%, #1B3355 45%, #0B1C33 100%); }
+.cmp-fold-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cmp-fold { animation: cmpFold 9s ease-in-out infinite alternate; transform-origin: 50% 50%; }
+@keyframes cmpFold { from { transform: translateX(-16px) skewX(-1.5deg); } to { transform: translateX(16px) skewX(1.5deg); } }
+.cmp-glass {
+  position: absolute; inset: 0;
+  background: linear-gradient(115deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,.12) 62%, rgba(255,255,255,0) 100%);
+  mix-blend-mode: screen;
+}
+
+/* ==========================================================================
+   5. SHIPPED WINR AURORA replica
+   ========================================================================== */
+.cmp-winr {
+  background: #ffffff;
+  --cx: 50%; --cy: 50%;
+}
+.cmp-winr-blob { position: absolute; border-radius: 50%; filter: blur(70px); }
+.cmp-winr-blob-a {
+  width: 62%; height: 78%; top: -18%; right: -12%;
+  background: radial-gradient(circle, rgba(0,87,168,.55) 0%, rgba(0,87,168,.22) 45%, rgba(0,87,168,0) 72%);
+  animation: cmpBlobA 19s ease-in-out infinite alternate;
+}
+.cmp-winr-blob-b {
+  width: 58%; height: 72%; bottom: -20%; left: -12%;
+  background: radial-gradient(circle, rgba(222,120,41,.55) 0%, rgba(222,120,41,.22) 45%, rgba(222,120,41,0) 72%);
+  animation: cmpBlobB 23s ease-in-out infinite alternate;
+}
+.cmp-winr-blob-c {
+  width: 46%; height: 56%; top: 28%; left: 34%;
+  background: radial-gradient(circle, rgba(0,87,168,.3) 0%, rgba(222,120,41,.18) 50%, rgba(255,255,255,0) 75%);
+  animation: cmpBlobC 27s ease-in-out infinite alternate;
+}
+@keyframes cmpBlobA { from { transform: translate(-4%, -3%) scale(1); } to { transform: translate(6%, 5%) scale(1.12); } }
+@keyframes cmpBlobB { from { transform: translate(3%, 4%) scale(1.08); } to { transform: translate(-5%, -4%) scale(1); } }
+@keyframes cmpBlobC { from { transform: translate(-6%, 3%) scale(.95); } to { transform: translate(7%, -5%) scale(1.1); } }
+
+@media (max-width: 980px) {
+  .cmp-tabs { grid-template-columns: repeat(2, 1fr); }
+  .cmp-content { grid-template-columns: 1fr; gap: 18px; }
+  .cmp-stage { height: 640px; }
+}

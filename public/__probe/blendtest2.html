@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #eef4ff, #fff 40%, #ffeede);
+      min-height: 100vh;
+      font: 12px sans-serif;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .case {
+      flex: 1;
+    }
+
+    .box {
+      border: 1px dashed #999;
+      padding: 6px;
+    }
+
+    video {
+      width: 100%;
+      mix-blend-mode: multiply;
+    }
+
+    /* A: exactly like current CSS — perspective on wrapper, float-anim on mid, transform anim on left */
+    .A .left {
+      animation: enter .9s both;
+    }
+
+    .A .wrap {
+      perspective: 1100px;
+    }
+
+    .A .mid {
+      animation: float3d 6.5s ease-in-out infinite;
+    }
+
+    @keyframes enter {
+      from {
+        opacity: 0;
+        transform: translate3d(-56px, 20px, 0) scale(.94)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    @keyframes float3d {
+      0% {
+        transform: translate3d(0, 6px, 0) rotateX(6deg)
+      }
+
+      50% {
+        transform: translate3d(0, -10px, 40px)
+      }
+
+      100% {
+        transform: translate3d(0, 6px, 0)
+      }
+    }
+
+    /* B: no perspective, no mid-anim, no left-anim — only blend */
+    /* C: anim on left only (transform), no perspective/mid-anim */
+    .C .left {
+      animation: enter .9s both;
+    }
+
+    /* D: perspective removed, mid-anim kept */
+    .D .mid {
+      animation: float3d 6.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="row">
+    <div class="case A box">
+      <h3>A all</h3>
+      <div class="left">
+        <div class="wrap">
+          <div class="mid"><video src="/__probe/float.mp4" muted autoplay playsinline></video></div>
+        </div>
+      </div>
+    </div>
+    <div class="case B box">
+      <h3>B none</h3>
+      <div class="left">
+        <div class="wrap">
+          <div class="mid"><video src="/__probe/float.mp4" muted autoplay playsinline></video></div>
+        </div>
+      </div>
+    </div>
+    <div class="case C box">
+      <h3>C left-anim only</h3>
+      <div class="left">
+        <div class="wrap">
+          <div class="mid"><video src="/__probe/float.mp4" muted autoplay playsinline></video></div>
+        </div>
+      </div>
+    </div>
+    <div class="case D box">
+      <h3>D mid-anim only</h3>
+      <div class="left">
+        <div class="wrap">
+          <div class="mid"><video src="/__probe/float.mp4" muted autoplay playsinline></video></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

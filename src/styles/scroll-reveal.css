@@ -1,0 +1,115 @@
+/* ==========================================================================
+   SMOOTH TRANSITIONS — CARDS, CONTENT & SECTIONS
+   --------------------------------------------------------------------------
+   One small, additive layer that makes every card / content block arrive
+   smoothly. It changes NOTHING about layout, size or colour, and it never
+   touches the card-UI animation models themselves (winfolder stage, the
+   4-card fan springs, the industry drift carousel, the hover-reveal cards,
+   the pinned cards). Those keep their own motion exactly as before.
+
+   Three pieces:
+     1. .reveal-pending / .reveal-in          — the existing on-scroll reveal
+        (applied by ScrollReveal.jsx), now with a soft blur+rise and a short
+        tidy transition instead of the ugly 0.3s transform slide.
+     2. [data-reveal-group] > * stagger       — cards/content inside a group
+        arrive one after another, on scroll AND on first load.
+     3. Motion-only easing for the still card types (opacity/transform only,
+        so their existing hover transitions are not flattened).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. ON-SCROLL REVEAL
+   Layout is never animated: only opacity / transform / filter.
+   -------------------------------------------------------------------------- */
+.reveal-pending {
+  opacity: 0;
+  transform: translateY(22px) scale(.992);
+  filter: blur(4px);
+  transition:
+    opacity .75s cubic-bezier(.22, 1, .36, 1),
+    transform .85s cubic-bezier(.22, 1, .36, 1),
+    filter .75s cubic-bezier(.22, 1, .36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-in {
+  animation: wrRiseIn .85s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+@keyframes wrRiseIn {
+  from { opacity: 0; transform: translateY(22px) scale(.992); filter: blur(4px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* The page divider keeps its own grow-in, just softer + staggered. */
+.wr-page-line.reveal-in {
+  animation: wrLineGrow .8s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* --------------------------------------------------------------------------
+   2. STAGGERED CARD / CONTENT GROUPS
+   A direct child of a [data-reveal-group] gets a `.reveal-hold` class from JS
+   ONLY when the script has confirmed it can observe that group. CSS never
+   hides a card by itself: if JS never runs or the observer is missed for any
+   reason, the card simply stays visible. That is deliberate - a stagger must
+   never be able to hide real content.
+   -------------------------------------------------------------------------- */
+[data-reveal-group] > .reveal-hold {
+  opacity: 0;
+  transform: translateY(26px) scale(.985);
+  filter: blur(4px);
+  transition:
+    opacity .7s cubic-bezier(.22, 1, .36, 1),
+    transform .8s cubic-bezier(.22, 1, .36, 1),
+    filter .7s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* When the group enters, each child runs this — --reveal-delay sets the beat. */
+[data-reveal-group] > .reveal-in {
+  animation: wrCardIn .8s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+@keyframes wrCardIn {
+  from { opacity: 0; transform: translateY(26px) scale(.985); filter: blur(4px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* --------------------------------------------------------------------------
+   3. MOTION-ONLY EASING FOR STATIC CARD TYPES
+   Only opacity / transform are listed, so each card's own hover transitions
+   (border, shadow, background) survive untouched.
+   -------------------------------------------------------------------------- */
+.wr-img-card,
+.wr-pinned-card,
+.wr-text-logo-badge,
+.wr-acc-card,
+.ind-challenge-card {
+  transition-property: opacity, transform, filter;
+  transition-duration: .3s;
+  transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+
+/* --------------------------------------------------------------------------
+   REDUCED MOTION — everything is simply visible, no movement, no blur.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-pending,
+  [data-reveal-group] > .reveal-hold {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+
+  .reveal-in,
+  [data-reveal-group] > .reveal-in,
+  .wr-page-line.reveal-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
